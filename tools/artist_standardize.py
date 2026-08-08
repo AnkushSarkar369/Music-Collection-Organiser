@@ -14,6 +14,7 @@ Interactive:
 """
 
 import re
+
 from mutagen.flac import FLAC
 from mutagen.oggopus import OggOpus
 
@@ -27,8 +28,6 @@ READERS = {
 }
 
 
-# Expand this over time.
-# Keys are matched exactly after splitting/cleanup.
 ARTIST_MAP = {
     "Mohd. Rafi": "Mohammed Rafi",
     "A.R. Rahman": "A. R. Rahman",
@@ -40,21 +39,8 @@ ARTIST_MAP = {
 
 
 # Only these are treated as artist separators:
-#
-#   ;
-#   feat
-#   feat.
-#   ft
-#   ft.
-#   featuring
-#
-# Deliberately NOT included:
-#   &
-#   and
-#   ,
-#   /
-#
-# This avoids accidentally splitting legitimate artist names.
+# ;, feat, feat., ft, ft., featuring
+# Deliberately not included: &, and, comma, /
 SEPARATOR_PATTERN = re.compile(
     r"\s*(?:;|\bfeat\.?\b|\bfeaturing\b|\bft\.?\b)\s*",
     flags=re.IGNORECASE,
@@ -63,7 +49,6 @@ SEPARATOR_PATTERN = re.compile(
 
 def normalize_separators(text: str) -> str:
     """Normalize supported artist separators to ';'."""
-
     if not text:
         return ""
 
@@ -77,28 +62,15 @@ def normalize_separators(text: str) -> str:
 
 
 def standardize(text: str) -> str:
-    """Return the canonical artist string."""
-
+    """Return the canonical artist string: 'Artist A; Artist B; Artist C'."""
     text = normalize_separators(text)
 
     if not text:
         return ""
 
-    artists = [
-        artist.strip()
-        for artist in text.split(";")
-        if artist.strip()
-    ]
-
-    artists = [
-        ARTIST_MAP.get(artist, artist)
-        for artist in artists
-    ]
-
-    artists = sorted(
-        artists,
-        key=str.casefold,
-    )
+    artists = [artist.strip() for artist in text.split(";") if artist.strip()]
+    artists = [ARTIST_MAP.get(artist, artist) for artist in artists]
+    artists = sorted(artists, key=str.casefold)
 
     return "; ".join(artists)
 
@@ -106,9 +78,16 @@ def standardize(text: str) -> str:
 def run():
     auto_accept = False
     updated = 0
+    skipped = 0
 
-    print(f"Scanning:\n{ROOT}\n")
-    print("Commands: y = yes | n = no | a = accept all | q = quit\n")
+    print("\n" + "=" * 58)
+    print("  ARTIST STANDARDIZATION")
+    print("=" * 58)
+    print(f"  Library: {ROOT}")
+    print("  Canonical format: Artist A; Artist B; Artist C")
+    print("-" * 58)
+    print("  Commands: y = apply | n = skip | a = accept all | q = quit")
+    print("=" * 58 + "\n")
 
     for file in ROOT.rglob("*"):
         ext = file.suffix.lower()
@@ -130,38 +109,47 @@ def run():
                 continue
 
             if not auto_accept:
-                print(file.relative_to(ROOT))
-                print(f"BEFORE : {before}")
-                print(f"AFTER  : {after}")
+                print("-" * 58)
+                print(f"  File   : {file.relative_to(ROOT)}")
+                print(f"  Before : {before}")
+                print(f"  After  : {after}")
+                print("-" * 58)
 
-                choice = input("[y/n/a/q] > ").strip().lower()
+                choice = input("  Apply change? [y/n/a/q]: ").strip().lower()
 
                 if choice == "q":
+                    print("\n  Operation cancelled by user.")
                     break
 
                 if choice == "n":
+                    skipped += 1
                     continue
 
                 if choice == "a":
                     auto_accept = True
 
                 if choice not in ("y", "a"):
+                    skipped += 1
                     continue
 
             audio["artist"] = after
             audio.save()
-
             updated += 1
 
             if auto_accept:
-                print(f"✓ {before} -> {after}")
+                print(f"  Applied: {before} -> {after}")
             else:
-                print("Applied.\n")
+                print("  Applied.\n")
 
         except Exception as e:
-            print(f"{file.name}: {e}")
+            print(f"  [!] {file.name}: {e}")
 
-    print(f"\nFinished. {updated} file(s) updated.")
+    print("\n" + "=" * 58)
+    print("  STANDARDIZATION COMPLETE")
+    print("=" * 58)
+    print(f"  Updated : {updated}")
+    print(f"  Skipped : {skipped}")
+    print("=" * 58 + "\n")
 
 
 if __name__ == "__main__":
