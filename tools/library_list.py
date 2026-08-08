@@ -53,26 +53,34 @@ def run():
 
         print()
 
-    print("+----------------------+------------+------------+-------------+")
-    print("| Directory            | Opus Count | FLAC Count | Total Songs |")
-    print("+----------------------+------------+------------+-------------+")
-
+    rows = []
     for directory in sorted(directories, key=str.casefold):
         opus_count = len(directories[directory]["opus"])
         flac_count = len(directories[directory]["flac"])
         total = opus_count + flac_count
-        label = directory[:20]
+        rows.append((directory, opus_count, flac_count, total))
 
+    directory_width = max(20, max(len(row[0]) for row in rows))
+    border = (
+        f"+{'-' * (directory_width + 2)}+------------+------------+-------------+"
+    )
+
+    print(border)
+    print(
+        f"| {'Directory':<{directory_width}} | "
+        f"{'Opus Count':>10} | {'FLAC Count':>10} | {'Total Songs':>11} |"
+    )
+    print(border)
+
+    for directory, opus_count, flac_count, total in rows:
         print(
-            f"| {label:<20} | {opus_count:>10} | "
+            f"| {directory:<{directory_width}} | {opus_count:>10} | "
             f"{flac_count:>10} | {total:>11} |"
         )
 
-    print("+----------------------+------------+------------+-------------+")
-    total_songs = sum(
-        len(data["flac"]) + len(data["opus"])
-        for data in directories.values()
-    )
+    print(border)
+
+    total_songs = sum(row[3] for row in rows)
     print(f"\n  Total songs: {total_songs}")
     print("=" * 58 + "\n")
 
