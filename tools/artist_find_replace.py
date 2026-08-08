@@ -1,6 +1,6 @@
 """
-Targeted find-and-replace for artist names.
-Use for bulk renames like initials -> full names across the whole library.
+Find and replace a specific artist name across the library.
+Read-only unless a matching artist is found and replaced.
 """
 
 from mutagen.flac import FLAC
@@ -21,18 +21,21 @@ def run():
     replace = input("Replace with: ").strip()
 
     if not search:
-        print("\n[!] Search artist cannot be empty.\n")
+        print("\n  [!] Search artist cannot be empty.\n")
         return
 
     changed = []
-    files = [f for f in ROOT.rglob("*") if f.is_file() and f.suffix.lower() in READERS]
+    files = [
+        file for file in ROOT.rglob("*")
+        if file.is_file() and file.suffix.lower() in READERS
+    ]
 
     print("\n" + "=" * 58)
     print("  ARTIST FIND & REPLACE")
     print("=" * 58)
     print(f"  Search : {search}")
     print(f"  Replace: {replace}")
-    print(f"  Files  : {len(files)}")
+    print(f"  Files  : {len(files):,}")
     print("-" * 58)
 
     for file in files:
@@ -48,15 +51,17 @@ def run():
             new_fields = []
 
             for field in artist_fields:
-                artists = [a.strip() for a in field.split("&")]
+                artists = [a.strip() for a in field.replace("&", ";").split(";")]
                 new_artists = []
+
                 for artist in artists:
                     if artist.lower() == search.lower():
                         new_artists.append(replace)
                         modified = True
                     else:
                         new_artists.append(artist)
-                new_fields.append(" & ".join(new_artists))
+
+                new_fields.append("; ".join(new_artists))
 
             if modified:
                 old_value = " | ".join(artist_fields)
@@ -73,7 +78,7 @@ def run():
     if not changed:
         print("  No files were changed.")
     else:
-        print(f"  Changed {len(changed)} file(s):\n")
+        print(f"  Changed {len(changed):,} file(s):\n")
         for i, (file, old_artist, new_artist) in enumerate(changed, 1):
             print(f"  {i:03d}. {file.relative_to(ROOT)}")
             print(f"       Before: {old_artist}")
