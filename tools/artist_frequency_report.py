@@ -36,7 +36,7 @@ def run():
             tags = READERS[file.suffix.lower()](file)
 
             for field in tags.get("artist", []):
-                for artist in field.replace("&", ";").split(";"):
+                for artist in field.split(";"):
                     artist = artist.strip()
                     if artist:
                         artists[artist] += 1
