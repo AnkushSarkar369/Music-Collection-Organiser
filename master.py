@@ -9,6 +9,7 @@ from tools import (
     artist_standardize,
     bracket_tag_report,
     cover_art_report,
+    library_list,
 )
 
 
@@ -18,6 +19,7 @@ TOOLS = [
     ("Standardize artist names (separators + rename map + alphabetize)", artist_standardize.run),
     ("Report bracketed tags found in filenames", bracket_tag_report.run),
     ("Report embedded album art sizes and resolutions", cover_art_report.run),
+    ("List library songs by directory", library_list.run),
 ]
 
 
