@@ -3,7 +3,6 @@ Targeted find-and-replace for artist names.
 Use for bulk renames like initials -> full names across the whole library.
 """
 
-from pathlib import Path
 from mutagen.flac import FLAC
 from mutagen.oggopus import OggOpus
 
