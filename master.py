@@ -22,12 +22,12 @@ TOOLS = [
     ("Report song count per artist", artist_frequency_report.run),
     ("Standardize artist names (separators + rename map + alphabetize)", artist_standardize.run),
     ("Report bracketed tags found in filenames", bracket_tag_report.run),
+    ("Report composers and their songs", composer_report.run),
+    ("Report files missing embedded album artwork", cover_art_missing.run),
     ("Report embedded album art sizes and resolutions", cover_art_report.run),
+    ("Report embedded artwork below 1000x1000", cover_art_resolution_report.run),
     ("List library songs by directory", library_list.run),
     ("Display a snapshot of the music library", library_stats.run),
-    ("Report files missing embedded album artwork", cover_art_missing.run),
-    ("Report embedded artwork below 1000x1000", cover_art_resolution_report.run),
-    ("Report composers and their songs", composer_report.run),
 ]
 
 
