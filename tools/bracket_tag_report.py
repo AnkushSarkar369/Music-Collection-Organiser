@@ -18,6 +18,12 @@ def run():
     counts = Counter()
     names = defaultdict(list)
 
+    print("\n" + "=" * 58)
+    print("  BRACKET TAG REPORT")
+    print("=" * 58)
+    print(f"  Scanning: {ROOT}")
+    print("-" * 58)
+
     for file in ROOT.rglob("*"):
         if not file.is_file():
             continue
@@ -28,14 +34,21 @@ def run():
             names[tag].append(file.name)
 
     if not counts:
-        print("No square-bracket tags found.")
+        print("  No square-bracket tags found.")
+        print("=" * 58 + "\n")
         return
 
+    print(f"  Found {sum(counts.values())} tag occurrence(s) across {len(counts)} unique tag(s).\n")
+
     for tag in sorted(counts, key=str.casefold):
-        print(f"[{tag}] ({counts[tag]})")
+        print(f"  [{tag}]  ({counts[tag]} occurrence(s))")
         for name in sorted(names[tag], key=str.casefold):
-            print(f"  - {name}")
+            print(f"      {name}")
         print()
+
+    print("=" * 58)
+    print("  Report complete.")
+    print("=" * 58 + "\n")
 
 
 if __name__ == "__main__":
