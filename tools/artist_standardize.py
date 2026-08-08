@@ -43,9 +43,9 @@ ARTIST_MAP = {
 
 
 # These are the only supported artist separators:
-# ;, &, feat, feat., ft, ft., featuring
+# ;, &, /, feat, feat., ft, ft., featuring
 SEPARATOR_PATTERN = re.compile(
-    r"\s*(?:;|&|\bfeat\.?\b|\bfeaturing\b|\bft\.?\b)\s*",
+    r"\s*(?:;|&|/|\bfeat\.?\b|\bfeaturing\b|\bft\.?\b)\s*",
     flags=re.IGNORECASE,
 )
 
