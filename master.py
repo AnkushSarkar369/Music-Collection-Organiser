@@ -8,7 +8,9 @@ from tools import (
     artist_frequency_report,
     artist_standardize,
     bracket_tag_report,
+    cover_art_missing,
     cover_art_report,
+    cover_art_resolution_report,
     library_list,
     library_stats,
 )
@@ -22,6 +24,8 @@ TOOLS = [
     ("Report embedded album art sizes and resolutions", cover_art_report.run),
     ("List library songs by directory", library_list.run),
     ("Display a snapshot of the music library", library_stats.run),
+    ("Report files missing embedded album artwork", cover_art_missing.run),
+    ("Report embedded artwork below 1000x1000", cover_art_resolution_report.run),
 ]
 
 
