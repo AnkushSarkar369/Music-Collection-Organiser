@@ -3,8 +3,6 @@ Report audio files with no embedded album artwork.
 Read-only — does not modify any files.
 """
 
-import base64
-
 from mutagen.flac import FLAC
 from mutagen.oggopus import OggOpus
 
