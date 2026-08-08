@@ -18,16 +18,16 @@ from tools import (
 
 
 TOOLS = [
-    ("Find & replace specific artist name.", artist_find_replace.run),
-    ("Report song count per artist", artist_frequency_report.run),
-    ("Standardize artist names (separators + rename map + alphabetize)", artist_standardize.run),
-    ("Report bracketed tags found in filenames", bracket_tag_report.run),
-    ("Report composers and their songs", composer_report.run),
-    ("Report files missing embedded album artwork", cover_art_missing.run),
-    ("Report embedded album art sizes and resolutions", cover_art_report.run),
-    ("Report embedded artwork below 1000x1000", cover_art_resolution_report.run),
-    ("List library songs by directory", library_list.run),
-    ("Display a snapshot of the music library", library_stats.run),
+    ("Artist · Find & Replace", artist_find_replace.run),
+    ("Artist · Frequency", artist_frequency_report.run),
+    ("Artist · Normalize", artist_standardize.run),
+    ("Files · Bracket Tags", bracket_tag_report.run),
+    ("Composers · Browse works", composer_report.run),
+    ("Artwork · Missing", cover_art_missing.run),
+    ("Artwork · Inspect", cover_art_report.run),
+    ("Artwork · Resolution", cover_art_resolution_report.run),
+    ("Library · List", library_list.run),
+    ("Library · Overview", library_stats.run),
 ]
 
 
