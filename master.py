@@ -25,18 +25,20 @@ TOOLS = [
 
 def main():
     while True:
-        print("\n" + "=" * 50)
-        print("flac-library-tools")
-        print("=" * 50)
+        print("\n" + "=" * 58)
+        print("                    MUSIC LIBRARY TOOLS")
+        print("=" * 58)
 
         for i, (description, _) in enumerate(TOOLS, 1):
-            print(f"{i}. {description}")
+            print(f"  {i}. {description}")
 
-        print("0. Exit")
+        print("\n  0. Exit")
+        print("-" * 58)
 
-        choice = input("\nPick: ").strip()
+        choice = input("Select a tool: ").strip()
 
         if choice == "0":
+            print("\nExiting.\n")
             break
 
         try:
@@ -44,16 +46,19 @@ def main():
             if option < 1 or option > len(TOOLS):
                 raise ValueError
         except ValueError:
-            print("Invalid choice.")
+            print("\nInvalid choice. Please select a listed option.\n")
             continue
 
-        print()
+        description, tool = TOOLS[option - 1]
+        print(f"\n{'=' * 58}\n  {description}\n{'=' * 58}\n")
+
         try:
-            TOOLS[option - 1][1]()
+            tool()
         except KeyboardInterrupt:
-            print("\nInterrupted.")
+            print("\n
+Operation interrupted.\n")
         except Exception as e:
-            print(f"Tool crashed: {e}")
+            print(f"\nTool failed: {e}\n")
 
 
 if __name__ == "__main__":
