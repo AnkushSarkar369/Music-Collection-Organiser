@@ -1,7 +1,7 @@
 """
 Standardizes artist tags:
 
-1. Normalizes supported separators (feat/ft/featuring/; -> ;)
+1. Normalizes artist separators to ';'
 2. Applies fixed rename map (typos, preferred spellings)
 3. Alphabetizes multi-artist fields
 4. Uses "; " as the only canonical separator
@@ -29,22 +29,30 @@ READERS = {
 
 
 ARTIST_MAP = {
-    "Mohd. Rafi": "Mohammed Rafi",
-    "A.R. Rahman": "A. R. Rahman",
-    "R.D. Burman": "R. D. Burman",
-    "Vishal & Shekhar": "Vishal-Shekhar",
-    "Shankar Ehsaan Loy": "Shankar-Ehsaan-Loy",
-    "Kalyanji - Anandji": "Kalyanji-Anandji",
+    "mohdrafi": "Mohammed Rafi",
+    "arrahman": "Allah Rakha Rahman",
+    "rdburman": "Rahul Dev Burman",
+    "hemantkumar": "Hemanta Mukhopadhyay",
+    "hemantamukherjee": "Hemanta Mukhopadhyay",
+    "hemantamukherji": "Hemanta Mukhopadhyay",
+    "hemantmukherjee": "Hemanta Mukhopadhyay",
+    "hemantmukherji": "Hemanta Mukhopadhyay",
+    "shankarehsaanloy": "Shankar-Ehsaan-Loy",
+    "kalyanjianandji": "Kalyanji-Anandji",
 }
 
 
-# Only these are treated as artist separators:
-# ;, feat, feat., ft, ft., featuring
-# Deliberately not included: &, and, comma, /
+# These are the only supported artist separators:
+# ;, &, feat, feat., ft, ft., featuring
 SEPARATOR_PATTERN = re.compile(
-    r"\s*(?:;|\bfeat\.?\b|\bfeaturing\b|\bft\.?\b)\s*",
+    r"\s*(?:;|&|\bfeat\.?\b|\bfeaturing\b|\bft\.?\b)\s*",
     flags=re.IGNORECASE,
 )
+
+
+def artist_key(text: str) -> str:
+    """Create a comparison key that ignores case, spaces, and punctuation."""
+    return re.sub(r"[^a-z0-9]", "", text.casefold())
 
 
 def normalize_separators(text: str) -> str:
@@ -69,7 +77,7 @@ def standardize(text: str) -> str:
         return ""
 
     artists = [artist.strip() for artist in text.split(";") if artist.strip()]
-    artists = [ARTIST_MAP.get(artist, artist) for artist in artists]
+    artists = [ARTIST_MAP.get(artist_key(artist), artist) for artist in artists]
     artists = sorted(artists, key=str.casefold)
 
     return "; ".join(artists)
