@@ -4,6 +4,7 @@ Read-only — does not modify any files.
 """
 
 from collections import Counter
+
 from mutagen.flac import FLAC
 from mutagen.oggopus import OggOpus
 
@@ -16,7 +17,11 @@ def run():
     artists = Counter()
     files = list(ROOT.rglob("*.flac")) + list(ROOT.rglob("*.opus"))
 
-    print(f"Scanning {len(files)} files...")
+    print("\n" + "=" * 58)
+    print("  ARTIST FREQUENCY REPORT")
+    print("=" * 58)
+    print(f"  Scanning {len(files)} FLAC/Opus file(s)...")
+    print("-" * 58)
 
     for i, f in enumerate(files, 1):
         try:
@@ -34,11 +39,21 @@ def run():
             pass
 
         if i % 500 == 0 or i == len(files):
-            print(f"{i}/{len(files)}")
+            print(f"  Progress: {i:>5}/{len(files)}")
 
-    print("\nArtist counts:\n")
-    for artist, count in artists.most_common():
-        print(f"{count:4}  {artist}")
+    print("\n" + "-" * 58)
+
+    if not artists:
+        print("  No artist tags found.")
+    else:
+        print(f"  {'Songs':>5}  Artist")
+        print("  " + "-" * 52)
+        for artist, count in artists.most_common():
+            print(f"  {count:>5}  {artist}")
+
+    print("\n" + "=" * 58)
+    print(f"  {len(artists)} unique artist(s) found.")
+    print("=" * 58 + "\n")
 
 
 if __name__ == "__main__":
