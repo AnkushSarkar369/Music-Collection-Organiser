@@ -1,5 +1,5 @@
 """
-List songs by directory and report FLAC/Opus counts.
+List songs by directory.
 Read-only — does not modify any files.
 """
 
@@ -13,20 +13,15 @@ AUDIO_EXTENSIONS = {".flac", ".opus"}
 
 
 def collect_files():
-    directories = defaultdict(lambda: {"flac": [], "opus": []})
+    directories = defaultdict(list)
 
     for file in ROOT.rglob("*"):
         if not file.is_file() or file.suffix.lower() not in AUDIO_EXTENSIONS:
             continue
 
         relative = file.relative_to(ROOT)
-        parts = relative.parts[:-1]
-        directory = " - ".join(parts)
-
-        if file.suffix.lower() == ".flac":
-            directories[directory]["flac"].append(file.stem)
-        else:
-            directories[directory]["opus"].append(file.stem)
+        directory = " - ".join(relative.parts[:-1])
+        directories[directory].append(file.stem)
 
     return directories
 
@@ -45,43 +40,14 @@ def run():
         return
 
     for directory in sorted(directories, key=str.casefold):
-        print(f"[{directory}]")
+        songs = sorted(directories[directory], key=str.casefold)
+        print(f"{directory} - {len(songs)}")
 
-        songs = directories[directory]["flac"] + directories[directory]["opus"]
-        for song in sorted(songs, key=str.casefold):
+        for song in songs:
             print(f"  {song}")
 
         print()
 
-    rows = []
-    for directory in sorted(directories, key=str.casefold):
-        opus_count = len(directories[directory]["opus"])
-        flac_count = len(directories[directory]["flac"])
-        total = opus_count + flac_count
-        rows.append((directory, opus_count, flac_count, total))
-
-    directory_width = max(20, max(len(row[0]) for row in rows))
-    border = (
-        f"+{'-' * (directory_width + 2)}+------------+------------+-------------+"
-    )
-
-    print(border)
-    print(
-        f"| {'Directory':<{directory_width}} | "
-        f"{'Opus Count':>10} | {'FLAC Count':>10} | {'Total Songs':>11} |"
-    )
-    print(border)
-
-    for directory, opus_count, flac_count, total in rows:
-        print(
-            f"| {directory:<{directory_width}} | {opus_count:>10} | "
-            f"{flac_count:>10} | {total:>11} |"
-        )
-
-    print(border)
-
-    total_songs = sum(row[3] for row in rows)
-    print(f"\n  Total songs: {total_songs}")
     print("=" * 58 + "\n")
 
 
