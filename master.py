@@ -55,8 +55,7 @@ def main():
         try:
             tool()
         except KeyboardInterrupt:
-            print("\n
-Operation interrupted.\n")
+            print("\nOperation interrupted.\n")
         except Exception as e:
             print(f"\nTool failed: {e}\n")
 
