@@ -19,17 +19,17 @@ READERS = {
 
 
 def get_picture(file):
-    audio = READERS[file.suffix.lower()](file)
+    extension = file.suffix.lower()
+    audio = READERS[extension](file)
 
-    if file.suffix.lower() == ".flac":
-        if not audio.pictures:
-            return None
-        return audio.pictures[0]
+    if extension == ".flac":
+        return audio.pictures[0] if audio.pictures else None
 
-    if "metadata_block_picture" not in audio:
+    values = audio.get("metadata_block_picture", [])
+    if not values:
         return None
 
-    return Picture(base64.b64decode(audio["metadata_block_picture"][0]))
+    return Picture(base64.b64decode(values[0]))
 
 
 def run():
@@ -48,23 +48,21 @@ def run():
 
             if picture is None:
                 missing.append(file)
-                continue
-
-            if picture.width < 1000 and picture.height < 1000:
-                low_resolution.append(
-                    (file, picture.width, picture.height)
-                )
+            elif picture.width < 1000 and picture.height < 1000:
+                low_resolution.append((file, picture.width, picture.height))
         except Exception as e:
             print(f"  [!] Could not inspect {file.relative_to(ROOT)}: {e}")
 
     missing.sort(key=lambda file: str(file).casefold())
     low_resolution.sort(key=lambda item: str(item[0]).casefold())
 
+    issue_count = len(missing) + len(low_resolution)
+
     print("\n" + "=" * 72)
     print("  ARTWORK AUDIT")
     print("=" * 72)
     print(f"  Audio files checked : {checked:,}")
-    print(f"  Issues found        : {len(missing) + len(low_resolution):,}")
+    print(f"  Issues found        : {issue_count:,}")
     print("=" * 72)
 
     print("\n  MISSING ARTWORKS")
@@ -73,8 +71,8 @@ def run():
     if not missing:
         print("  None")
     else:
-        for i, file in enumerate(missing, 1):
-            print(f"  {i:03d}. {file.relative_to(ROOT)}")
+        for index, file in enumerate(missing, 1):
+            print(f"  {index:03d}. {file.relative_to(ROOT)}")
 
     print("\n  LOW RESOLUTION ARTWORKS")
     print("  " + "-" * 68)
