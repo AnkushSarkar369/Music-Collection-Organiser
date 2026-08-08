@@ -10,6 +10,7 @@ from tools import (
     bracket_tag_report,
     cover_art_report,
     library_list,
+    library_stats,
 )
 
 
@@ -20,6 +21,7 @@ TOOLS = [
     ("Report bracketed tags found in filenames", bracket_tag_report.run),
     ("Report embedded album art sizes and resolutions", cover_art_report.run),
     ("List library songs by directory", library_list.run),
+    ("Display a snapshot of the music library", library_stats.run),
 ]
 
 
