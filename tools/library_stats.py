@@ -4,6 +4,7 @@ Read-only — does not modify any files.
 """
 
 import base64
+import re
 from collections import defaultdict
 
 from mutagen.flac import FLAC
@@ -18,6 +19,10 @@ READERS = {
     ".opus": OggOpus,
 }
 AUDIO_EXTENSIONS = set(READERS)
+ARTIST_SEPARATOR_PATTERN = re.compile(
+    r"\s*(?:;|&|\bfeat\.?\b|\bfeaturing\b|\bft\.?\b)\s*",
+    flags=re.IGNORECASE,
+)
 
 
 def artwork_size(audio, extension):
@@ -43,6 +48,10 @@ def format_size(size):
     return f"{size:,} B"
 
 
+def split_artists(value):
+    return [artist.strip() for artist in ARTIST_SEPARATOR_PATTERN.split(value) if artist.strip()]
+
+
 def run():
     directories = defaultdict(
         lambda: {
@@ -56,7 +65,6 @@ def run():
     )
 
     total_size = 0
-    total_artwork_size = 0
     total_artists = set()
 
     for file in ROOT.rglob("*"):
@@ -81,15 +89,12 @@ def run():
             audio = READERS[extension](file)
 
             for field in audio.get("artist", []):
-                for artist in field.split(";"):
-                    artist = artist.strip()
-                    if artist:
-                        data["artists"].add(artist)
-                        total_artists.add(artist)
+                for artist in split_artists(field):
+                    data["artists"].add(artist)
+                    total_artists.add(artist)
 
             artwork = artwork_size(audio, extension)
             data["artwork_size"] += artwork
-            total_artwork_size += artwork
         except Exception:
             pass
 
