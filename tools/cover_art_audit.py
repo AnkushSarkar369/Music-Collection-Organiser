@@ -84,7 +84,7 @@ def run():
         print("  None")
     else:
         print(f"  {'Resolution':<14} File")
-        print("  {'-' * 66}")
+        print("  " + "-" * 66)
         for file, width, height in low_resolution:
             resolution = f"{width}×{height}"
             print(f"  {resolution:<14} {file.relative_to(ROOT)}")
