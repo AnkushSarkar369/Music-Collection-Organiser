@@ -21,15 +21,22 @@ def run():
     replace = input("Replace with: ").strip()
 
     if not search:
-        print("Search artist cannot be empty.")
+        print("\n[!] Search artist cannot be empty.\n")
         return
 
     changed = []
+    files = [f for f in ROOT.rglob("*") if f.is_file() and f.suffix.lower() in READERS]
 
-    for file in ROOT.rglob("*"):
+    print("\n" + "=" * 58)
+    print("  ARTIST FIND & REPLACE")
+    print("=" * 58)
+    print(f"  Search : {search}")
+    print(f"  Replace: {replace}")
+    print(f"  Files  : {len(files)}")
+    print("-" * 58)
+
+    for file in files:
         ext = file.suffix.lower()
-        if ext not in READERS:
-            continue
 
         try:
             audio = READERS[ext](file)
@@ -59,22 +66,23 @@ def run():
                 changed.append((file, old_value, new_value))
 
         except Exception as e:
-            print(f"Skipped {file}: {e}")
+            print(f"  [!] Skipped {file.relative_to(ROOT)}: {e}")
 
-    print()
+    print("\n" + "-" * 58)
 
     if not changed:
-        print("No files were changed.")
-        return
+        print("  No files were changed.")
+    else:
+        print(f"  Changed {len(changed)} file(s):\n")
+        for i, (file, old_artist, new_artist) in enumerate(changed, 1):
+            print(f"  {i:03d}. {file.relative_to(ROOT)}")
+            print(f"       Before: {old_artist}")
+            print(f"       After : {new_artist}")
+            print()
 
-    print(f"Changed {len(changed)} file(s):\n")
-    for i, (file, old_artist, new_artist) in enumerate(changed, 1):
-        print(f"{i:03d}. {file.relative_to(ROOT)}")
-        print(f"     Before: {old_artist}")
-        print(f"     After : {new_artist}")
-        print()
-
-    print("Done.")
+    print("=" * 58)
+    print("  Done.")
+    print("=" * 58 + "\n")
 
 
 if __name__ == "__main__":
