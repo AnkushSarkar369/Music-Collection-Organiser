@@ -3,43 +3,33 @@ Master menu for flac-library-tools.
 Run this from the project root: python3 master.py
 """
 
-import importlib
-import pkgutil
+from tools import (
+    artist_find_replace,
+    artist_frequency_report,
+    artist_standardize,
+    bracket_tag_report,
+    cover_art_report,
+)
 
-import tools
 
-
-def discover_tools():
-    found = {}
-    for _, name, _ in pkgutil.iter_modules(tools.__path__):
-        try:
-            mod = importlib.import_module(f"tools.{name}")
-        except Exception as e:
-            print(f"Could not load tools.{name}: {e}")
-            continue
-
-        if hasattr(mod, "run"):
-            desc = getattr(mod, "DESCRIPTION", name)
-            found[name] = (desc, mod.run)
-
-    return found
+TOOLS = [
+    ("Find and replace a specific artist name across the library", artist_find_replace.run),
+    ("Report song count per artist", artist_frequency_report.run),
+    ("Standardize artist names (separators + rename map + alphabetize)", artist_standardize.run),
+    ("Report [bracketed] tags found in filenames", bracket_tag_report.run),
+    ("Report embedded album art sizes and resolutions", cover_art_report.run),
+]
 
 
 def main():
-    tools_map = discover_tools()
-    names = sorted(tools_map)
-
-    if not names:
-        print("No tools found in tools/. Check that files define run().")
-        return
-
     while True:
         print("\n" + "=" * 50)
         print("flac-library-tools")
         print("=" * 50)
-        for i, name in enumerate(names, 1):
-            desc, _ = tools_map[name]
-            print(f"{i}. {desc}")
+
+        for i, (description, _) in enumerate(TOOLS, 1):
+            print(f"{i}. {description}")
+
         print("0. Exit")
 
         choice = input("\nPick: ").strip()
@@ -48,17 +38,16 @@ def main():
             break
 
         try:
-            idx = int(choice) - 1
-            if idx < 0:
+            option = int(choice)
+            if option < 1 or option > len(TOOLS):
                 raise ValueError
-            name = names[idx]
-        except (ValueError, IndexError):
+        except ValueError:
             print("Invalid choice.")
             continue
 
         print()
         try:
-            tools_map[name][1]()
+            TOOLS[option - 1][1]()
         except KeyboardInterrupt:
             print("\nInterrupted.")
         except Exception as e:
