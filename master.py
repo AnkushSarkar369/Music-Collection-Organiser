@@ -13,10 +13,10 @@ from tools import (
 
 
 TOOLS = [
-    ("Find and replace a specific artist name across the library", artist_find_replace.run),
+    ("Find & replace specific artist name.", artist_find_replace.run),
     ("Report song count per artist", artist_frequency_report.run),
     ("Standardize artist names (separators + rename map + alphabetize)", artist_standardize.run),
-    ("Report [bracketed] tags found in filenames", bracket_tag_report.run),
+    ("Report bracketed tags found in filenames", bracket_tag_report.run),
     ("Report embedded album art sizes and resolutions", cover_art_report.run),
 ]
 
