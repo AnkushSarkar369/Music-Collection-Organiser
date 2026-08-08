@@ -1,4 +1,3 @@
-```python
 """
 Standardizes artist tags:
 
@@ -57,9 +56,8 @@ ARTIST_MAP = {
 #
 # This avoids accidentally splitting legitimate artist names.
 SEPARATOR_PATTERN = re.compile(
-    r"\s*(?:;|&|,|\bfeat\.?\b|\bfeaturing\b|\bft\.?\b)\s*",
+    r"\s*(?:;|\bfeat\.?\b|\bfeaturing\b|\bft\.?\b)\s*",
     flags=re.IGNORECASE,
-)
 )
 
 
@@ -69,19 +67,10 @@ def normalize_separators(text: str) -> str:
     if not text:
         return ""
 
-    # Convert supported separators to a single delimiter.
     text = SEPARATOR_PATTERN.sub(";", text)
-
-    # Normalize whitespace around semicolons.
     text = re.sub(r"\s*;\s*", ";", text)
-
-    # Collapse repeated semicolons.
     text = re.sub(r";{2,}", ";", text)
-
-    # Remove leading/trailing semicolons.
     text = text.strip("; ")
-
-    # Normalize remaining whitespace inside artist names.
     text = " ".join(text.split())
 
     return text
@@ -95,26 +84,22 @@ def standardize(text: str) -> str:
     if not text:
         return ""
 
-    # Split only on the safe/canonical separator.
     artists = [
         artist.strip()
         for artist in text.split(";")
         if artist.strip()
     ]
 
-    # Apply exact rename map.
     artists = [
         ARTIST_MAP.get(artist, artist)
         for artist in artists
     ]
 
-    # Alphabetize artists case-insensitively.
     artists = sorted(
         artists,
         key=str.casefold,
     )
 
-    # Canonical output: "A; B; C"
     return "; ".join(artists)
 
 
@@ -141,7 +126,6 @@ def run():
             before = artist_fields[0]
             after = standardize(before)
 
-            # Nothing needs changing.
             if before == after:
                 continue
 
@@ -164,7 +148,6 @@ def run():
                 if choice not in ("y", "a"):
                     continue
 
-            # Apply the standardized artist field.
             audio["artist"] = after
             audio.save()
 
@@ -183,4 +166,3 @@ def run():
 
 if __name__ == "__main__":
     run()
-```
