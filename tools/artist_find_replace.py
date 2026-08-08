@@ -51,7 +51,7 @@ def run():
             new_fields = []
 
             for field in artist_fields:
-                artists = [a.strip() for a in field.replace("&", ";").split(";")]
+                artists = [a.strip() for a in field.split(";")]
                 new_artists = []
 
                 for artist in artists:
