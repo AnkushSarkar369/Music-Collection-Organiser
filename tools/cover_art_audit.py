@@ -23,13 +23,36 @@ def get_picture(file):
     audio = READERS[extension](file)
 
     if extension == ".flac":
-        return audio.pictures[0] if audio.pictures else None
+        pictures = audio.pictures
+
+        if not pictures:
+            return None
+
+        # FLAC files may contain multiple pictures. Prefer an explicitly
+        # tagged front cover; otherwise inspect the largest embedded image.
+        front_covers = [picture for picture in pictures if picture.type == 3]
+        candidates = front_covers or pictures
+
+        return max(
+            candidates,
+            key=lambda picture: picture.width * picture.height,
+        )
 
     values = audio.get("metadata_block_picture", [])
     if not values:
         return None
 
-    return Picture(base64.b64decode(values[0]))
+    pictures = [Picture(base64.b64decode(value)) for value in values]
+
+    # Opus can also contain multiple embedded pictures. Prefer an explicitly
+    # tagged front cover; otherwise inspect the largest embedded image.
+    front_covers = [picture for picture in pictures if picture.type == 3]
+    candidates = front_covers or pictures
+
+    return max(
+        candidates,
+        key=lambda picture: picture.width * picture.height,
+    )
 
 
 def run():
