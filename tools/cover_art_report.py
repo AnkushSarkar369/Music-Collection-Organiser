@@ -1,5 +1,4 @@
-"""
-Analyzes embedded album art across the library: sizes, resolutions,
+"""Analyzes embedded album art across the library: sizes, resolutions,
 largest/smallest, top 10 by file size.
 Read-only — does not modify any files.
 """
@@ -8,7 +7,7 @@ import base64
 from io import BytesIO
 
 from PIL import Image
-from mutagen.flac import FLAC, Picture
+from mutagen.flac import FLAC
 from mutagen.oggopus import OggOpus
 
 from config import ROOT
@@ -16,13 +15,60 @@ from config import ROOT
 DESCRIPTION = "Report embedded album art sizes and resolutions"
 
 
-def get_dimensions(picture):
-    """Return reliable image dimensions, falling back to the image bytes."""
-    if picture.width > 0 and picture.height > 0:
-        return picture.width, picture.height
+def get_pictures(file):
+    """Return embedded artwork bytes and metadata needed for selection."""
+    extension = file.suffix.lower()
 
-    with Image.open(BytesIO(picture.data)) as image:
-        return image.width, image.height
+    if extension == ".flac":
+        audio = FLAC(file)
+        return audio.pictures
+
+    audio = OggOpus(file)
+    values = audio.get("metadata_block_picture", [])
+
+    return [
+        {
+            "type": 0,
+            "data": base64.b64decode(value),
+        }
+        for value in values
+    ]
+
+
+def inspect_picture(picture):
+    """Return actual image dimensions from the embedded image bytes."""
+    if isinstance(picture, dict):
+        picture_type = picture["type"]
+        data = picture["data"]
+    else:
+        picture_type = picture.type
+        data = picture.data
+
+    with Image.open(BytesIO(data)) as image:
+        return {
+            "type": picture_type,
+            "data": data,
+            "width": image.width,
+            "height": image.height,
+        }
+
+
+def get_cover(file):
+    """Select the representative cover using actual image dimensions."""
+    pictures = get_pictures(file)
+
+    if not pictures:
+        return None
+
+    inspected = [inspect_picture(picture) for picture in pictures]
+
+    front_covers = [picture for picture in inspected if picture["type"] == 3]
+    candidates = front_covers or inspected
+
+    return max(
+        candidates,
+        key=lambda picture: picture["width"] * picture["height"],
+    )
 
 
 def run():
@@ -46,32 +92,14 @@ def run():
             continue
 
         try:
-            if file.suffix.lower() == ".flac":
-                audio = FLAC(file)
-                pictures = audio.pictures
-            else:
-                audio = OggOpus(file)
-                values = audio.get("metadata_block_picture", [])
-                pictures = [
-                    Picture(base64.b64decode(value))
-                    for value in values
-                ]
+            picture = get_cover(file)
 
-            if not pictures:
+            if picture is None:
                 continue
 
-            # Prefer an explicitly tagged front cover. If none exists,
-            # use the highest-resolution embedded picture.
-            front_covers = [picture for picture in pictures if picture.type == 3]
-            candidates = front_covers or pictures
-
-            pic = max(
-                candidates,
-                key=lambda picture: get_dimensions(picture)[0] * get_dimensions(picture)[1],
-            )
-
-            size = len(pic.data)
-            width, height = get_dimensions(pic)
+            size = len(picture["data"])
+            width = picture["width"]
+            height = picture["height"]
             pixels = width * height
 
             total_bytes += size
