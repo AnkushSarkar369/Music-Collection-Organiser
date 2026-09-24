@@ -121,13 +121,13 @@ The tools fall into two simple categories.
 
 `Artwork · Replace Low-Res` is dry-run by default. It only modifies the library when invoked with `--apply`. It requires an exact `<FLAC stem>.jpg` match in `~/Music/Album Art`, verifies the embedded image dimensions after saving, and deletes the source JPG only after successful verification.
 
-Neither metadata-writing tool renames files or folders. They only modify the embedded artist metadata of FLAC/Opus files.
+These tools do not rename files or folders. `Artist · Normalize` and `Artist · Find & Replace` modify artist metadata; `Artwork · Replace Low-Res` replaces embedded cover artwork.
 
 `Artist · Normalize` is interactive: each proposed change can be applied, skipped, accepted for all remaining files, or cancelled.
 
 ## Installation
 
-Clone the repository and install the single dependency:
+Clone the repository and install the dependencies:
 
 ```bash
 pip install -r requirements.txt
@@ -163,6 +163,7 @@ Music-Collection-Organiser/
     ├── composer_report.py
     ├── cover_art_audit.py
     ├── cover_art_report.py
+    ├── cover_art_replace.py
     ├── library_list.py
     └── library_stats.py
 ```
