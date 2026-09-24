@@ -11,6 +11,7 @@ from tools import (
     composer_report,
     cover_art_audit,
     cover_art_report,
+    cover_art_replace,
     library_list,
     library_stats,
 )
@@ -22,6 +23,7 @@ TOOLS = [
     ("Artist · Normalize", artist_standardize.run),
     ("Artwork · Audit", cover_art_audit.run),
     ("Artwork · Inspect", cover_art_report.run),
+    ("Artwork · Replace Low-Res", cover_art_replace.run),
     ("Composers · Browse works", composer_report.run),
     ("Files · Bracket Tags", bracket_tag_report.run),
     ("Library · List", library_list.run),
