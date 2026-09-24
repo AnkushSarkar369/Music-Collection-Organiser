@@ -37,14 +37,27 @@ def run():
         try:
             if file.suffix.lower() == ".flac":
                 audio = FLAC(file)
-                if not audio.pictures:
-                    continue
-                pic = audio.pictures[0]
+                pictures = audio.pictures
             else:
                 audio = OggOpus(file)
-                if "metadata_block_picture" not in audio:
-                    continue
-                pic = Picture(base64.b64decode(audio["metadata_block_picture"][0]))
+                values = audio.get("metadata_block_picture", [])
+                pictures = [
+                    Picture(base64.b64decode(value))
+                    for value in values
+                ]
+
+            if not pictures:
+                continue
+
+            # Prefer an explicitly tagged front cover. If none exists,
+            # use the highest-resolution embedded picture.
+            front_covers = [picture for picture in pictures if picture.type == 3]
+            candidates = front_covers or pictures
+
+            pic = max(
+                candidates,
+                key=lambda picture: picture.width * picture.height,
+            )
 
             size = len(pic.data)
             width = pic.width
@@ -73,8 +86,8 @@ def run():
             if lowest_dim is None or pixels < lowest_dim["pixels"]:
                 lowest_dim = info
 
-        except Exception:
-            pass
+        except Exception as e:
+            print(f"  [!] Could not inspect {file.relative_to(ROOT)}: {e}")
 
     if cover_count == 0:
         print("  No embedded covers found.")
