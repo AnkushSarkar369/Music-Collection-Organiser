@@ -1,4 +1,4 @@
-""""Audit embedded album artwork for missing and low-resolution covers.
+"""Audit embedded album artwork for missing and low-resolution covers.
 Read-only — does not modify any files.
 """
 
@@ -6,8 +6,7 @@ import base64
 from io import BytesIO
 
 from PIL import Image
-from mutagen.flac import FLAC
-from mutagen.flac import Picture
+from mutagen.flac import FLAC, Picture
 from mutagen.oggopus import OggOpus
 
 from config import ROOT
@@ -41,7 +40,7 @@ def get_pictures(file):
 
 
 def inspect_picture(picture):
-    """Return the actual image dimensions and raw data."""
+    """Return actual image dimensions and raw data."""
     with Image.open(BytesIO(picture.data)) as image:
         return {
             "type": picture.type,
@@ -59,7 +58,6 @@ def get_cover(file):
         return None
 
     inspected = [inspect_picture(picture) for picture in pictures]
-
     front_covers = [picture for picture in inspected if picture["type"] == 3]
     candidates = front_covers or inspected
 
@@ -97,14 +95,14 @@ def run():
 
     issue_count = len(missing) + len(low_resolution)
 
-    print("\\n" + "=" * 72)
+    print("\n" + "=" * 72)
     print("  ARTWORK AUDIT")
     print("=" * 72)
     print(f"  Audio files checked : {checked:,}")
     print(f"  Issues found        : {issue_count:,}")
     print("=" * 72)
 
-    print("\\n  MISSING ARTWORKS")
+    print("\n  MISSING ARTWORKS")
     print("  " + "-" * 68)
 
     if not missing:
@@ -113,7 +111,7 @@ def run():
         for index, file in enumerate(missing, 1):
             print(f"  {index:03d}. {file.relative_to(ROOT)}")
 
-    print("\\n  LOW RESOLUTION ARTWORKS")
+    print("\n  LOW RESOLUTION ARTWORKS")
     print("  " + "-" * 68)
     print("  Criteria: width < 1000 AND height < 1000")
 
@@ -126,9 +124,8 @@ def run():
             resolution = f"{width}×{height}"
             print(f"  {resolution:<14} {file.relative_to(ROOT)}")
 
-    print("\\n" + "=" * 72 + "\\n")
+    print("\n" + "=" * 72 + "\n")
 
 
 if __name__ == "__main__":
     run()
-"
