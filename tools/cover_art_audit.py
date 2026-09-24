@@ -4,7 +4,9 @@ Read-only — does not modify any files.
 """
 
 import base64
+from io import BytesIO
 
+from PIL import Image
 from mutagen.flac import FLAC, Picture
 from mutagen.oggopus import OggOpus
 
@@ -16,6 +18,15 @@ READERS = {
     ".flac": FLAC,
     ".opus": OggOpus,
 }
+
+
+def get_dimensions(picture):
+    """Return reliable image dimensions, falling back to the image bytes."""
+    if picture.width > 0 and picture.height > 0:
+        return picture.width, picture.height
+
+    with Image.open(BytesIO(picture.data)) as image:
+        return image.width, image.height
 
 
 def get_picture(file):
@@ -35,7 +46,7 @@ def get_picture(file):
 
         return max(
             candidates,
-            key=lambda picture: picture.width * picture.height,
+            key=lambda picture: get_dimensions(picture)[0] * get_dimensions(picture)[1],
         )
 
     values = audio.get("metadata_block_picture", [])
@@ -51,7 +62,7 @@ def get_picture(file):
 
     return max(
         candidates,
-        key=lambda picture: picture.width * picture.height,
+        key=lambda picture: get_dimensions(picture)[0] * get_dimensions(picture)[1],
     )
 
 
@@ -71,8 +82,8 @@ def run():
 
             if picture is None:
                 missing.append(file)
-            elif picture.width < 1000 and picture.height < 1000:
-                low_resolution.append((file, picture.width, picture.height))
+            elif (width := get_dimensions(picture))[0] < 1000 and width[1] < 1000:
+                low_resolution.append((file, width[0], width[1]))
         except Exception as e:
             print(f"  [!] Could not inspect {file.relative_to(ROOT)}: {e}")
 
