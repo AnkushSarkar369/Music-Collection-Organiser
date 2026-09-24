@@ -5,7 +5,9 @@ Read-only — does not modify any files.
 """
 
 import base64
+from io import BytesIO
 
+from PIL import Image
 from mutagen.flac import FLAC, Picture
 from mutagen.oggopus import OggOpus
 
@@ -56,12 +58,11 @@ def run():
 
             pic = max(
                 candidates,
-                key=lambda picture: picture.width * picture.height,
+                key=lambda picture: get_dimensions(picture)[0] * get_dimensions(picture)[1],
             )
 
             size = len(pic.data)
-            width = pic.width
-            height = pic.height
+            width, height = get_dimensions(pic)
             pixels = width * height
 
             total_bytes += size
