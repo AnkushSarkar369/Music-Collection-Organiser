@@ -16,6 +16,15 @@ from config import ROOT
 DESCRIPTION = "Report embedded album art sizes and resolutions"
 
 
+def get_dimensions(picture):
+    """Return reliable image dimensions, falling back to the image bytes."""
+    if picture.width > 0 and picture.height > 0:
+        return picture.width, picture.height
+
+    with Image.open(BytesIO(picture.data)) as image:
+        return image.width, image.height
+
+
 def run():
     total_bytes = 0
     cover_count = 0
