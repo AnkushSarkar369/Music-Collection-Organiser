@@ -42,12 +42,23 @@ ARTIST_MAP = {
 }
 
 
-# These are the only supported artist separators:
+# These are the supported artist separators:
 # ;, ,, &, /, feat, feat., ft, ft., featuring
 SEPARATOR_PATTERN = re.compile(
-    r"\s*(?:;|,|&|/|\bfeat\.?\b|\bfeaturing\b|\bft\.?\b)\s*",
+    r"\s*(?:;|,|&|/|\bfeat\.?(?=\s|$)|\bfeaturing\b|\bft\.?(?=\s|$))\s*",
     flags=re.IGNORECASE,
 )
+
+# Some artists legitimately contain characters that are also separators.
+# Protect those names before separator normalization.
+PROTECTED_ARTISTS = {
+    "DISH//": "__PROTECTED_ARTIST_DISH__",
+    "Au/Ra": "__PROTECTED_ARTIST_AURA__",
+}
+
+PROTECTED_ARTISTS_REVERSE = {
+    value: key for key, value in PROTECTED_ARTISTS.items()
+}
 
 
 def artist_key(text: str) -> str:
@@ -71,12 +82,19 @@ def normalize_separators(text: str) -> str:
 
 def standardize(text: str) -> str:
     """Return the canonical artist string: 'Artist A; Artist B; Artist C'."""
+    for artist, placeholder in PROTECTED_ARTISTS.items():
+        text = text.replace(artist, placeholder)
+
     text = normalize_separators(text)
 
     if not text:
         return ""
 
-    artists = [artist.strip() for artist in text.split(";") if artist.strip()]
+    artists = [
+        PROTECTED_ARTISTS_REVERSE.get(artist.strip(), artist.strip())
+        for artist in text.split(";")
+        if artist.strip()
+    ]
     artists = [ARTIST_MAP.get(artist_key(artist), artist) for artist in artists]
     artists = sorted(artists, key=str.casefold)
 
