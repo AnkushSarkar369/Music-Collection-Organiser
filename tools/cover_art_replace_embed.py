@@ -1,11 +1,9 @@
 """Replace or embed artwork in FLAC and Opus files.
 
 Dry-run by default. Use --apply to modify files.
-Artwork source priority:
-1. Exact matching image in ~/Music/Album Art
-2. Exact matching FLAC/Opus file with embedded artwork
 
-The source audio file and source image are never modified or deleted.
+Artwork sources are restricted to exact filename matches in ~/Music/Album Art.
+The source image is never modified or deleted.
 """
 
 from __future__ import annotations
@@ -52,53 +50,16 @@ def write_picture(path: Path, picture: Picture):
 
 def album_art_candidates(stem: str) -> list[Path]:
     matches = []
+
     for path in ART_ROOT.iterdir():
-        if path.is_file() and path.suffix.lower() in IMAGE_EXTENSIONS:
-            if path.stem.casefold() == stem.casefold():
-                matches.append(path)
-    return sorted(matches, key=lambda p: p.name.casefold())
-
-
-def audio_candidates(target: Path) -> list[Path]:
-    matches = []
-    for path in ROOT.rglob("*"):
         if (
             path.is_file()
-            and path != target
-            and path.suffix.lower() in AUDIO_EXTENSIONS
-            and path.stem.casefold() == target.stem.casefold()
+            and path.suffix.lower() in IMAGE_EXTENSIONS
+            and path.stem.casefold() == stem.casefold()
         ):
             matches.append(path)
-    return sorted(matches, key=lambda p: str(p).casefold())
 
-
-def front_cover(audio):
-    pictures = getattr(audio, "pictures", [])
-    if not pictures:
-        return None
-
-    fronts = [picture for picture in pictures if picture.type == 3]
-    return max(fronts or pictures, key=lambda p: p.width * p.height)
-
-
-def find_audio_source(target: Path):
-    candidates = []
-
-    for path in audio_candidates(target):
-        try:
-            picture = front_cover(open_audio(path))
-            if picture is not None:
-                candidates.append((path, picture))
-        except Exception:
-            continue
-
-    if len(candidates) == 1:
-        return candidates[0]
-
-    if len(candidates) > 1:
-        return candidates
-
-    return None
+    return sorted(matches, key=lambda p: p.name.casefold())
 
 
 # ---------------------------------------------------------------------------
@@ -136,25 +97,27 @@ def verify(path: Path, expected: Picture):
     return actual.width, actual.height
 
 
+def front_cover(audio):
+    pictures = getattr(audio, "pictures", [])
+
+    if not pictures:
+        return None
+
+    fronts = [picture for picture in pictures if picture.type == 3]
+    return max(fronts or pictures, key=lambda p: p.width * p.height)
+
+
 def source_for(target: Path):
     image_matches = album_art_candidates(target.stem)
 
     if len(image_matches) == 1:
-        return ("Album Art", image_matches[0], picture_from_image(image_matches[0]))
+        image = image_matches[0]
+        return image, picture_from_image(image)
 
     if len(image_matches) > 1:
-        return ("ambiguous Album Art", image_matches, None)
+        return image_matches, None
 
-    audio_source = find_audio_source(target)
-
-    if audio_source is None:
-        return (None, None, None)
-
-    if isinstance(audio_source, list):
-        return ("ambiguous audio source", audio_source, None)
-
-    source_path, picture = audio_source
-    return ("matching audio", source_path, picture)
+    return None, None
 
 
 # ---------------------------------------------------------------------------
@@ -175,16 +138,17 @@ def run(apply: bool = False):
     )
 
     planned = []
+    ambiguous = []
     changed = []
-    skipped = []
     failed = []
+    unmatched = 0
 
     print("\n" + "=" * 72)
     print("  ARTWORK · REPLACE / EMBED")
     print("=" * 72)
     print(f"  Library : {ROOT}")
     print(f"  Artwork : {ART_ROOT}")
-    print("  Sources : Album Art → matching audio file artwork")
+    print("  Source  : matching image from Album Art only")
     print(f"  Mode    : {'APPLY' if apply else 'DRY RUN'}")
     print("=" * 72)
 
@@ -192,25 +156,18 @@ def run(apply: bool = False):
         relative = target.relative_to(ROOT)
 
         try:
-            source_kind, source, picture = source_for(target)
+            source, picture = source_for(target)
 
-            if source_kind is None:
-                skipped.append((target, "no matching artwork source"))
-                print(f"  SKIP  {relative} — no matching artwork source")
+            if source is None:
+                unmatched += 1
                 continue
 
-            if source_kind == "ambiguous Album Art":
-                names = ", ".join(path.name for path in source)
-                skipped.append((target, f"ambiguous Album Art: {names}"))
-                print(f"  SKIP  {relative} — ambiguous Album Art: {names}")
-                continue
-
-            if source_kind == "ambiguous audio source":
-                names = ", ".join(
-                    str(path.relative_to(ROOT)) for path, _ in source
+            if picture is None:
+                ambiguous.append((target, source))
+                print(
+                    f"  AMBIGUOUS  {relative} — "
+                    + ", ".join(path.name for path in source)
                 )
-                skipped.append((target, f"ambiguous audio source: {names}"))
-                print(f"  SKIP  {relative} — ambiguous audio source")
                 continue
 
             width, height = picture.width, picture.height
@@ -219,8 +176,7 @@ def run(apply: bool = False):
                 planned.append(target)
                 print(
                     f"  PLAN  {relative}: "
-                    f"{width}×{height} from {source_kind} "
-                    f"({source.name})"
+                    f"{width}×{height} from Album Art ({source.name})"
                 )
                 continue
 
@@ -230,8 +186,7 @@ def run(apply: bool = False):
             changed.append(target)
             print(
                 f"  DONE  {relative}: "
-                f"{verified_width}×{verified_height} from {source_kind} "
-                f"({source.name})"
+                f"{verified_width}×{verified_height} from Album Art ({source.name})"
             )
 
         except Exception as exc:
@@ -248,13 +203,9 @@ def run(apply: bool = False):
         print("  No files were modified.")
         print("  Run with --apply to perform the replacements.")
 
-    print(f"  Skipped              : {len(skipped):,}")
+    print(f"  No artwork match     : {unmatched:,}")
+    print(f"  Ambiguous matches    : {len(ambiguous):,}")
     print(f"  Failed               : {len(failed):,}")
-
-    if skipped:
-        print("\n  SKIPPED")
-        for file, reason in skipped:
-            print(f"  - {file.relative_to(ROOT)}: {reason}")
 
     if failed:
         print("\n  FAILURES")
@@ -267,6 +218,7 @@ def run(apply: bool = False):
 def menu():
     run(apply=False)
     choice = input("Apply the planned artwork replacements? [y/N]: ").strip().lower()
+
     if choice in {"y", "yes"}:
         run(apply=True)
     else:
