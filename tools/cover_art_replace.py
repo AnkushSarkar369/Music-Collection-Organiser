@@ -192,6 +192,16 @@ def run(apply: bool = False):
     print("=" * 72 + "\n")
 
 
+def menu():
+    """Interactive entry point used by master.py."""
+    run(apply=False)
+    choice = input("Apply the planned replacements? [y/N]: ").strip().lower()
+    if choice in {"y", "yes"}:
+        run(apply=True)
+    else:
+        print("No files were modified.\\n")
+
+
 def main():
     parser = argparse.ArgumentParser(description=DESCRIPTION)
     parser.add_argument(
