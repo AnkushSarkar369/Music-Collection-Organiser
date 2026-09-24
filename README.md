@@ -21,7 +21,7 @@ The project is deliberately small: one shared configuration, one master menu, an
 | **Artwork · Audit** | Find missing artwork and artwork below `1000 × 1000`. |
 | **Artwork · Inspect** | Report embedded artwork sizes, resolutions, averages, and extremes. |
 | **Artwork · Replace Low-Res** | Replace low-resolution FLAC covers with exact-match JPGs from `~/Music/Album Art`, verify the embedded result, and then remove the source JPG. |
-| **Artwork · Sync Opus** | Embed covers into Opus files using matching Album Art first, then matching FLAC artwork. |
+| **Artwork · Replace / Embed** | Replace or embed covers in FLAC and Opus files using matching Album Art first, then matching audio artwork. |
 
 ### Composers
 
