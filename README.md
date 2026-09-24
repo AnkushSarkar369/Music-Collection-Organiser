@@ -119,7 +119,7 @@ The tools fall into two simple categories.
 - `artist_find_replace.py`
 - `cover_art_replace.py`
 
-`Artwork · Replace Low-Res` is dry-run by default. It only modifies the library when invoked with `--apply`. It requires an exact `<FLAC stem>.jpg` match in `~/Music/Album Art`, verifies the embedded image dimensions after saving, and deletes the source JPG only after successful verification.
+`Artwork · Replace Low-Res` is dry-run by default. It only modifies the library when invoked with `--apply`. It requires an exact <FLAC stem>.jpg match in `~/Music/Album Art`, verifies the embedded image dimensions after saving, and deletes the source JPG only after successful verification.
 
 These tools do not rename files or folders. `Artist · Normalize` and `Artist · Find & Replace` modify artist metadata; `Artwork · Replace Low-Res` replaces embedded cover artwork.
 
@@ -205,6 +205,16 @@ python3 tools/library_stats.py
 python3 tools/artist_frequency_report.py
 python3 tools/cover_art_replace.py --apply
 ```
+
+Some tools import the shared `config.py` directly. When running one of these tools as a standalone script causes `ModuleNotFoundError: No module named 'config'`, run it from the project root as a Python module instead:
+
+```bash
+python3 -m tools.flac_optimize --apply
+python3 -m tools.tag_audit
+python3 -m tools.library_format_report
+```
+
+This keeps the project root on Python's module search path.
 
 ## Adding a tool
 
