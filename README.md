@@ -20,6 +20,7 @@ The project is deliberately small: one shared configuration, one master menu, an
 |---|---|
 | **Artwork · Audit** | Find missing artwork and artwork below `1000 × 1000`. |
 | **Artwork · Inspect** | Report embedded artwork sizes, resolutions, averages, and extremes. |
+| **Artwork · Replace Low-Res** | Replace low-resolution FLAC covers with exact-match JPGs from `~/Music/Album Art`, verify the embedded result, and then remove the source JPG. |
 
 ### Composers
 
@@ -52,10 +53,11 @@ Run everything through `master.py`:
 3. Artist · Normalize
 4. Artwork · Audit
 5. Artwork · Inspect
-6. Composers · Browse works
-7. Files · Bracket Tags
-8. Library · List
-9. Library · Overview
+6. Artwork · Replace Low-Res
+7. Composers · Browse works
+8. Files · Bracket Tags
+9. Library · List
+10. Library · Overview
 0. Exit
 ```
 
@@ -115,6 +117,9 @@ The tools fall into two simple categories.
 
 - `artist_standardize.py`
 - `artist_find_replace.py`
+- `cover_art_replace.py`
+
+`Artwork · Replace Low-Res` is dry-run by default. It only modifies the library when invoked with `--apply`. It requires an exact `<FLAC stem>.jpg` match in `~/Music/Album Art`, verifies the embedded image dimensions after saving, and deletes the source JPG only after successful verification.
 
 Neither metadata-writing tool renames files or folders. They only modify the embedded artist metadata of FLAC/Opus files.
 
@@ -197,6 +202,7 @@ Individual tools can also be run directly, for example:
 ```bash
 python3 tools/library_stats.py
 python3 tools/artist_frequency_report.py
+python3 tools/cover_art_replace.py --apply
 ```
 
 ## Adding a tool
