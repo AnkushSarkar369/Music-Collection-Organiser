@@ -12,22 +12,28 @@ from tools import (
     cover_art_audit,
     cover_art_report,
     cover_art_replace,
+    flac_optimize,
+    library_format_report,
     library_list,
     library_stats,
+    tag_audit,
 )
 
 
 TOOLS = [
-    ("Artist · Find & Replace", artist_find_replace.run),
-    ("Artist · Frequency", artist_frequency_report.run),
-    ("Artist · Normalize", artist_standardize.run),
-    ("Artwork · Audit", cover_art_audit.run),
-    ("Artwork · Inspect", cover_art_report.run),
-    ("Artwork · Replace Low-Res", cover_art_replace.menu),
-    ("Composers · Browse works", composer_report.run),
-    ("Files · Bracket Tags", bracket_tag_report.run),
-    ("Library · List", library_list.run),
-    ("Library · Overview", library_stats.run),
+    ("Artist · Find & Replace - Replace specific artist names.", artist_find_replace.run),
+    ("Artist · Frequency - Lists artists by track frequency.", artist_frequency_report.run),
+    ("Artist · Normalize - Standardizes artist names, separators, and ordering.", artist_standardize.run),
+    ("Artwork · Audit - Finds missing and low-resolution artwork.", cover_art_audit.run),
+    ("Artwork · Inspect - Reports embedded artwork sizes and resolutions.", cover_art_report.run),
+    ("Artwork · Replace Low-Res - Replaces low-resolution FLAC covers from Album Art.", cover_art_replace.menu),
+    ("Composers · Browse works - Lists songs grouped by composer metadata.", composer_report.run),
+    ("Files · Bracket Tags - Finds bracketed annotations in filenames.", bracket_tag_report.run),
+    ("FLAC · Optimize - Audits and removes unused FLAC metadata padding.", flac_optimize.run),
+    ("Library · Formats - Reports formats and technical audio characteristics.", library_format_report.run),
+    ("Library · List - Lists songs alphabetically within directories.", library_list.run),
+    ("Library · Overview - Shows per-directory counts, sizes, artwork, and artists.", library_stats.run),
+    ("Metadata · Audit - Finds missing, extra, comma, and unsorted tags.", tag_audit.run),
 ]
 
 
