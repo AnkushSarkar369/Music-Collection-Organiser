@@ -1,4 +1,4 @@
-"""Audit embedded album artwork for missing and low-resolution covers.
+""""Audit embedded album artwork for missing and low-resolution covers.
 Read-only — does not modify any files.
 """
 
@@ -7,6 +7,7 @@ from io import BytesIO
 
 from PIL import Image
 from mutagen.flac import FLAC
+from mutagen.flac import Picture
 from mutagen.oggopus import OggOpus
 
 from config import ROOT
@@ -20,7 +21,7 @@ READERS = {
 
 
 def get_pictures(file):
-    """Return raw embedded artwork bytes and metadata needed for selection."""
+    """Return embedded Picture blocks for FLAC and Opus files."""
     extension = file.suffix.lower()
     audio = READERS[extension](file)
 
@@ -28,28 +29,23 @@ def get_pictures(file):
         return audio.pictures
 
     values = audio.get("metadata_block_picture", [])
-    return [
-        {
-            "type": 0,
-            "data": base64.b64decode(value),
-        }
-        for value in values
-    ]
+    pictures = []
+
+    for value in values:
+        try:
+            pictures.append(Picture(base64.b64decode(value)))
+        except Exception:
+            continue
+
+    return pictures
 
 
 def inspect_picture(picture):
     """Return the actual image dimensions and raw data."""
-    if isinstance(picture, dict):
-        picture_type = picture["type"]
-        data = picture["data"]
-    else:
-        picture_type = picture.type
-        data = picture.data
-
-    with Image.open(BytesIO(data)) as image:
+    with Image.open(BytesIO(picture.data)) as image:
         return {
-            "type": picture_type,
-            "data": data,
+            "type": picture.type,
+            "data": picture.data,
             "width": image.width,
             "height": image.height,
         }
@@ -101,14 +97,14 @@ def run():
 
     issue_count = len(missing) + len(low_resolution)
 
-    print("\n" + "=" * 72)
+    print("\\n" + "=" * 72)
     print("  ARTWORK AUDIT")
     print("=" * 72)
     print(f"  Audio files checked : {checked:,}")
     print(f"  Issues found        : {issue_count:,}")
     print("=" * 72)
 
-    print("\n  MISSING ARTWORKS")
+    print("\\n  MISSING ARTWORKS")
     print("  " + "-" * 68)
 
     if not missing:
@@ -117,7 +113,7 @@ def run():
         for index, file in enumerate(missing, 1):
             print(f"  {index:03d}. {file.relative_to(ROOT)}")
 
-    print("\n  LOW RESOLUTION ARTWORKS")
+    print("\\n  LOW RESOLUTION ARTWORKS")
     print("  " + "-" * 68)
     print("  Criteria: width < 1000 AND height < 1000")
 
@@ -130,8 +126,9 @@ def run():
             resolution = f"{width}×{height}"
             print(f"  {resolution:<14} {file.relative_to(ROOT)}")
 
-    print("\n" + "=" * 72 + "\n")
+    print("\\n" + "=" * 72 + "\\n")
 
 
 if __name__ == "__main__":
     run()
+"
