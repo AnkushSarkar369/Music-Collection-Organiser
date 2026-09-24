@@ -21,6 +21,7 @@ The project is deliberately small: one shared configuration, one master menu, an
 | **Artwork · Audit** | Find missing artwork and artwork below `1000 × 1000`. |
 | **Artwork · Inspect** | Report embedded artwork sizes, resolutions, averages, and extremes. |
 | **Artwork · Replace Low-Res** | Replace low-resolution FLAC covers with exact-match JPGs from `~/Music/Album Art`, verify the embedded result, and then remove the source JPG. |
+| **Artwork · Sync Opus** | Embed covers into Opus files using matching Album Art first, then matching FLAC artwork. |
 
 ### Composers
 
@@ -54,10 +55,14 @@ Run everything through `master.py`:
 4. Artwork · Audit
 5. Artwork · Inspect
 6. Artwork · Replace Low-Res
-7. Composers · Browse works
-8. Files · Bracket Tags
-9. Library · List
-10. Library · Overview
+7. Artwork · Sync Opus
+8. Composers · Browse works
+9. Files · Bracket Tags
+10. FLAC · Optimize
+11. Library · Formats
+12. Library · List
+13. Library · Overview
+14. Metadata · Audit
 0. Exit
 ```
 
@@ -118,6 +123,10 @@ The tools fall into two simple categories.
 - `artist_standardize.py`
 - `artist_find_replace.py`
 - `cover_art_replace.py`
+- `cover_art_sync_opus.py`
+- `flac_optimize.py`
+- `tag_audit.py`
+- `library_format_report.py`
 
 `Artwork · Replace Low-Res` is dry-run by default. It only modifies the library when invoked with `--apply`. It requires an exact <FLAC stem>.jpg match in `~/Music/Album Art`, verifies the embedded image dimensions after saving, and deletes the source JPG only after successful verification.
 
