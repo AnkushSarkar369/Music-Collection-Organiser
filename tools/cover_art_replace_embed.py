@@ -9,6 +9,7 @@ The source image is never modified or deleted.
 from __future__ import annotations
 
 import argparse
+import base64
 import mimetypes
 from io import BytesIO
 from pathlib import Path
@@ -39,8 +40,17 @@ def open_audio(path: Path):
 
 def write_picture(path: Path, picture: Picture):
     audio = open_audio(path)
-    audio.clear_pictures()
-    audio.add_picture(picture)
+
+    if path.suffix.lower() == ".flac":
+        audio.clear_pictures()
+        audio.add_picture(picture)
+    else:
+        # Ogg Opus stores FLAC Picture blocks in the
+        # METADATA_BLOCK_PICTURE Vorbis comment.
+        audio["metadata_block_picture"] = [
+            base64.b64encode(picture.write()).decode("ascii")
+        ]
+
     audio.save()
 
 
@@ -84,6 +94,32 @@ def picture_from_image(path: Path) -> Picture:
     return picture
 
 
+def pictures_from_audio(audio):
+    if isinstance(audio, FLAC):
+        return list(audio.pictures)
+
+    encoded = audio.get("metadata_block_picture", [])
+    pictures = []
+
+    for value in encoded:
+        try:
+            pictures.append(Picture(base64.b64decode(value)))
+        except Exception:
+            continue
+
+    return pictures
+
+
+def front_cover(audio):
+    pictures = pictures_from_audio(audio)
+
+    if not pictures:
+        return None
+
+    fronts = [picture for picture in pictures if picture.type == 3]
+    return max(fronts or pictures, key=lambda p: p.width * p.height)
+
+
 def verify(path: Path, expected: Picture):
     audio = open_audio(path)
     actual = front_cover(audio)
@@ -95,16 +131,6 @@ def verify(path: Path, expected: Picture):
         raise RuntimeError("verification failed: embedded artwork differs from source")
 
     return actual.width, actual.height
-
-
-def front_cover(audio):
-    pictures = getattr(audio, "pictures", [])
-
-    if not pictures:
-        return None
-
-    fronts = [picture for picture in pictures if picture.type == 3]
-    return max(fronts or pictures, key=lambda p: p.width * p.height)
 
 
 def source_for(target: Path):
