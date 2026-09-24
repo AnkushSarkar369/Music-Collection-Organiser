@@ -1,5 +1,4 @@
-"""
-Audit embedded album artwork for missing and low-resolution covers.
+"""Audit embedded album artwork for missing and low-resolution covers.
 Read-only — does not modify any files.
 """
 
@@ -7,7 +6,7 @@ import base64
 from io import BytesIO
 
 from PIL import Image
-from mutagen.flac import FLAC, Picture
+from mutagen.flac import FLAC
 from mutagen.oggopus import OggOpus
 
 from config import ROOT
@@ -20,49 +19,57 @@ READERS = {
 }
 
 
-def get_dimensions(picture):
-    """Return reliable image dimensions, falling back to the image bytes."""
-    if picture.width > 0 and picture.height > 0:
-        return picture.width, picture.height
-
-    with Image.open(BytesIO(picture.data)) as image:
-        return image.width, image.height
-
-
-def get_picture(file):
+def get_pictures(file):
+    """Return raw embedded artwork bytes and metadata needed for selection."""
     extension = file.suffix.lower()
     audio = READERS[extension](file)
 
     if extension == ".flac":
-        pictures = audio.pictures
-
-        if not pictures:
-            return None
-
-        # FLAC files may contain multiple pictures. Prefer an explicitly
-        # tagged front cover; otherwise inspect the largest embedded image.
-        front_covers = [picture for picture in pictures if picture.type == 3]
-        candidates = front_covers or pictures
-
-        return max(
-            candidates,
-            key=lambda picture: get_dimensions(picture)[0] * get_dimensions(picture)[1],
-        )
+        return audio.pictures
 
     values = audio.get("metadata_block_picture", [])
-    if not values:
+    return [
+        {
+            "type": 0,
+            "data": base64.b64decode(value),
+        }
+        for value in values
+    ]
+
+
+def inspect_picture(picture):
+    """Return the actual image dimensions and raw data."""
+    if isinstance(picture, dict):
+        picture_type = picture["type"]
+        data = picture["data"]
+    else:
+        picture_type = picture.type
+        data = picture.data
+
+    with Image.open(BytesIO(data)) as image:
+        return {
+            "type": picture_type,
+            "data": data,
+            "width": image.width,
+            "height": image.height,
+        }
+
+
+def get_cover(file):
+    """Select the representative cover using actual image dimensions."""
+    pictures = get_pictures(file)
+
+    if not pictures:
         return None
 
-    pictures = [Picture(base64.b64decode(value)) for value in values]
+    inspected = [inspect_picture(picture) for picture in pictures]
 
-    # Opus can also contain multiple embedded pictures. Prefer an explicitly
-    # tagged front cover; otherwise inspect the largest embedded image.
-    front_covers = [picture for picture in pictures if picture.type == 3]
-    candidates = front_covers or pictures
+    front_covers = [picture for picture in inspected if picture["type"] == 3]
+    candidates = front_covers or inspected
 
     return max(
         candidates,
-        key=lambda picture: get_dimensions(picture)[0] * get_dimensions(picture)[1],
+        key=lambda picture: picture["width"] * picture["height"],
     )
 
 
@@ -78,12 +85,14 @@ def run():
         checked += 1
 
         try:
-            picture = get_picture(file)
+            picture = get_cover(file)
 
             if picture is None:
                 missing.append(file)
-            elif (width := get_dimensions(picture))[0] < 1000 and width[1] < 1000:
-                low_resolution.append((file, width[0], width[1]))
+            elif picture["width"] < 1000 and picture["height"] < 1000:
+                low_resolution.append(
+                    (file, picture["width"], picture["height"])
+                )
         except Exception as e:
             print(f"  [!] Could not inspect {file.relative_to(ROOT)}: {e}")
 
